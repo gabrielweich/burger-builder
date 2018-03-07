@@ -6,6 +6,8 @@ import classes from './ContactData.css';
 import axios from '../../../axios-orders';
 import Spinner from '../../../components/UI/Spinner/Spinner';
 import Input from '../../../components/UI/Input/Input';
+import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
+import * as actions from '../../../store/actions/';
 
 class ContactData extends Component {
   state = {
@@ -91,50 +93,40 @@ class ContactData extends Component {
       },
     },
     formIsValid: false,
-    loading: false,
   }
 
   orderHandler = (event) => {
     event.preventDefault();
-    this.setState({ loading: true });
     const formData = {};
 
-    for(let formElementIdentifier in this.state.orderForm){
+    for (let formElementIdentifier in this.state.orderForm) {
       formData[formElementIdentifier] = this.state.orderForm[formElementIdentifier].value;
     }
-    
+
     const order = {
       ingredients: this.props.ingredients,
       price: this.props.totalPrice,
       orderData: formData,
     }
 
-    axios.post('/orders.json', order)
-      .then(response => {
-        this.setState({ loading: false });
-        this.props.history.push('/');
-      })
-      .catch(error => {
-        this.setState({ loading: false })
-        console.log(error);
-      })
+    this.props.onOrderBurger(order);
   }
 
   checkValidity = (value, rules) => {
     let isValid = true;
-    if(!rules){
+    if (!rules) {
       return true;
     }
 
-    if(rules.required){
+    if (rules.required) {
       isValid = value.trim() !== '';
     }
 
-    if(isValid && rules.minLength) {
+    if (isValid && rules.minLength) {
       isValid = value.length >= rules.minLength;
     }
 
-    if(isValid && rules.maxLength) {
+    if (isValid && rules.maxLength) {
       isValid = value.length <= rules.maxLength;
     }
 
@@ -142,9 +134,9 @@ class ContactData extends Component {
   }
 
   inputChangedHandler = (event, inputIdentifier) => {
-    const updatedOrderForm = {...this.state.orderForm};
+    const updatedOrderForm = { ...this.state.orderForm };
 
-    const updatedFormElement = {...updatedOrderForm[inputIdentifier]};
+    const updatedFormElement = { ...updatedOrderForm[inputIdentifier] };
 
     updatedFormElement.value = event.target.value;
     updatedFormElement.valid = this.checkValidity(updatedFormElement.value, updatedFormElement.validation);
@@ -153,11 +145,11 @@ class ContactData extends Component {
     updatedOrderForm[inputIdentifier] = updatedFormElement;
 
     let formIsValid = true;
-    for(let inputIdentifier in updatedOrderForm){
+    for (let inputIdentifier in updatedOrderForm) {
       formIsValid = formIsValid && updatedOrderForm[inputIdentifier].valid;
     }
 
-    this.setState({orderForm: updatedOrderForm, formIsValid});
+    this.setState({ orderForm: updatedOrderForm, formIsValid });
   }
 
   render() {
@@ -178,13 +170,13 @@ class ContactData extends Component {
             changed={(event) => this.inputChangedHandler(event, formElement.id)}
             invalid={!formElement.config.valid}
             shouldValidate={formElement.config.validation}
-            touched={formElement.config.touched}/>
+            touched={formElement.config.touched} />
         ))}
         <Button btnType="Success" disabled={!this.state.formIsValid} clicked={this.orderHandler}>ORDER</Button>
       </form>
     );
 
-    if (this.state.loading) {
+    if (this.props.loading) {
       form = <Spinner />
     }
     return (
@@ -198,8 +190,16 @@ class ContactData extends Component {
 
 const mapStateToProps = (state) => {
   return {
-    ingredients: state.ingredients,
-    totalPrice: state.totalPrice,
+    ingredients: state.burgerBuilder.ingredients,
+    totalPrice: state.burgerBuilder.totalPrice,
+    loading: state.order.loading,
   }
 }
-export default connect(mapStateToProps)(ContactData);
+
+const mapDispatchToProps = dispatch => {
+  return {
+    onOrderBurger: (orderData) => dispatch(actions.purchaseBurger(orderData)),
+  }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(withErrorHandler(ContactData, axios));
