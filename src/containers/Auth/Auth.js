@@ -6,6 +6,7 @@ import Input from '../../components/UI/Input/Input';
 import Button from '../../components/UI/Button/Button';
 import Spinner from '../../components/UI/Spinner/Spinner';
 import classes from './Auth.css';
+import { updateObject, checkValidity } from '../../shared/utility';
 import * as actions from '../../store/actions/';
 
 class Auth extends Component {
@@ -44,52 +45,20 @@ class Auth extends Component {
   }
 
   componentDidMount() {
-    if(!this.props.buildingBurger && this.props.authRedirectPath !== '/'){
+    if (!this.props.buildingBurger && this.props.authRedirectPath !== '/') {
       this.props.onSetAuthRedirectPath();
     }
   }
 
-  checkValidity = (value, rules) => {
-    let isValid = true;
-    if (!rules) {
-      return true;
-    }
-
-    if (rules.required) {
-      isValid = value.trim() !== '';
-    }
-
-    if (isValid && rules.minLength) {
-      isValid = value.length >= rules.minLength;
-    }
-
-    if (isValid && rules.isEmail) {
-      const pattern = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;;
-      isValid = pattern.test(String(value).toLowerCase());
-    }
-
-    if (isValid && rules.isNumeric) {
-      const pattern = /^\d+$/;
-      isValid = pattern.test(value);
-    }
-
-    if (isValid && rules.maxLength) {
-      isValid = value.length <= rules.maxLength;
-    }
-
-    return isValid;
-  }
-
   inputChangedHandler = (event, controlName) => {
-    const updatedControls = {
-      ...this.state.controls,
-      [controlName]: {
-        ...this.state.controls[controlName],
+    const updatedControls = updateObject(this.state.controls, {
+      [controlName]: updateObject(this.state.controls[controlName], {
         value: event.target.value,
-        valid: this.checkValidity(event.target.value, this.state.controls[controlName].validation),
+        valid: checkValidity(event.target.value, this.state.controls[controlName].validation),
         touched: true,
-      }
-    };
+      })
+    });
+
     this.setState({ controls: updatedControls })
   }
 

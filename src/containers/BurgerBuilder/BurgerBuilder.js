@@ -19,7 +19,6 @@ class BurgerBuilder extends Component {
 
   updatePurchaseState(ingredients) {
     let isPurchasable = false;
-    console.log(ingredients);
     for (const igKey in ingredients) {
       if (ingredients[igKey] > 0) {
         isPurchasable = true;
@@ -100,7 +99,6 @@ class BurgerBuilder extends Component {
 }
 
 const mapStateToProps = (state) => {
-  console.log(state);
   return {
     ingredients: state.burgerBuilder.ingredients,
     totalPrice: state.burgerBuilder.totalPrice,
